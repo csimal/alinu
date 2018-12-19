@@ -1,9 +1,8 @@
 #include "matrix.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "f2c.h"
 
-void print_vector(int n, doublereal *x)
+void print_vector(int n, double *x)
 {
     int i;
     for (i = 0; i < n; i++) {
@@ -12,7 +11,7 @@ void print_vector(int n, doublereal *x)
     printf("\n\n");
 }
 
-void print_matrix(int m, int n, doublereal *a)
+void print_matrix(int m, int n, double *a)
 {
     int i, j;
     for (i = 0; i < m; i++) {
@@ -25,7 +24,7 @@ void print_matrix(int m, int n, doublereal *a)
 }
 
 // copy vector u to vector v
-void copy_vector(int n, doublereal *u, doublereal *v)
+void copy_vector(int n, double *u, double *v)
 {
     int i;
     for (i = 0; i < n; i++) {
@@ -33,9 +32,9 @@ void copy_vector(int n, doublereal *u, doublereal *v)
     }
 }
 
-void read_vector(FILE* fp, int n, doublereal *v) {
+void read_vector(FILE* fp, int n, double *v) {
     char line[1024], *p, *e;
-    doublereal val;
+    double val;
     int i;
 
     fgets(line, sizeof(line), fp);
@@ -45,15 +44,14 @@ void read_vector(FILE* fp, int n, doublereal *v) {
 }
 
 // read matrix from file and put it in column major order in a
-void read_matrix(FILE* fp, int m, int n, doublereal *a) {
-    doublereal *v = calloc(n, sizeof(doublereal));
+void read_matrix(FILE* fp, int m, int n, double *a) {
+    double *v = calloc(n, sizeof(double));
     int i, j;
-    
+
     for (i = 0; i < m; i++) {
         read_vector(fp, n, v);
         for (j = 0; j < n; j++) {
             a[i+j*m] = v[j];
         }
     }
-
 }
