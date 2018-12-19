@@ -55,3 +55,13 @@ void read_matrix(FILE* fp, int m, int n, double *a) {
         }
     }
 }
+
+void read_matrix_2(FILE* fp, int m, int n, double* a) {
+    int i,j;
+
+    for (i = 0; i < m; i++) {
+        for (j = 0; j < n; j++) {
+            fscanf(fp,"%lf\n", &(a[i+j*m]));
+        }
+    }
+}

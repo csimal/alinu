@@ -14,5 +14,6 @@ void read_vector(FILE* fp, int n, double *v);
 
 void read_matrix(FILE* fp, int m, int n, double *a);
 
+void read_matrix_2(FILE* fp, int m, int n, double *a);
 
 #endif
