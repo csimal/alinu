@@ -1,6 +1,7 @@
 #include "matrix.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 void print_vector(int n, double *x)
 {
@@ -56,12 +57,65 @@ void read_matrix(FILE* fp, int m, int n, double *a) {
     }
 }
 
-void read_matrix_2(FILE* fp, int m, int n, double* a) {
+// read a symetric matrix in column form
+void read_matrix_sc(FILE* fp, int n, double *a_vec) {
+    int i,j;
+    double val;
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            fscanf(fp,"%lf\n", &val);
+            if (i>=j) {
+                a_vec[(j-1)*n + i - (j*(j-1))/2] = val;
+            }
+        }
+    }
+}
+
+void gaxpy_s(int n, double *a_vec, double *x, double *y) {
     int i,j;
 
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) {
-            fscanf(fp,"%lf\n", &(a[i+j*m]));
+    for (j = 0; j < n; j++) {
+        for (i = 0; i < j; i++) {
+            y[i] += a_vec[(i-1)*n + j - (i*(i-1))/2]*x[j];
         }
+        for (i = j; i < n; i++) {
+            y[i] += a_vec[(j-1)*n + i - (j*(j-1))/2]*x[j];
+        }
+    }
+}
+
+void saxpy(int n, double a, double *x, double *y) {
+    int i;
+    for (i = 0; i < n; i++) {
+        y[i] += a*x[i];
+    }
+}
+
+void vector_nullify(int n, double *v) {
+    int i;
+    for (i = 0; i < n; i++) {
+        v[i] = 0.0;
+    }
+}
+
+double vector_dot_product(int n, double *u, double *v) {
+    double sum = 0.0;
+    int i;
+
+    for (i = 0; i < n; i++) {
+        sum =+ u[i]*v[i];
+    }
+    return sum;
+}
+
+double vector_norm(int n, double *v) {
+    return sqrt(vector_dot_product(n,v,v));
+}
+
+void vector_copy(int n, double *u, double *v) {
+    int i;
+    for (i = 0; i < n; i++) {
+        v[i] = u[i];
     }
 }
