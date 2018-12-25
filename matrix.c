@@ -24,18 +24,9 @@ void print_matrix(int m, int n, double *a)
     printf("\n");
 }
 
-// copy vector u to vector v
-void copy_vector(int n, double *u, double *v)
-{
-    int i;
-    for (i = 0; i < n; i++) {
-        v[i] = u[i];
-    }
-}
 
 void read_vector(FILE* fp, int n, double *v) {
     char line[1024], *p, *e;
-    double val;
     int i;
 
     fgets(line, sizeof(line), fp);
@@ -72,6 +63,22 @@ void read_matrix_sc(FILE* fp, int n, double *a_vec) {
     }
 }
 
+void write_vector_c(FILE *fp, int n, double *v) {
+    int i;
+    fprintf(fp, "%d\n",n);
+    for (i = 0; i < n; i++) {
+       fprintf(fp, "%lf\n",v[i]); 
+    }
+}
+
+void write_vector(FILE *fp, int n, double *v) {
+    int i;
+    for (i = 0; i < n; i++) {
+        fprintf(fp, "%lf ", v[i]);
+    }
+    fprintf(fp, "\n");
+}
+
 void gaxpy_s(int n, double *a_vec, double *x, double *y) {
     int i,j;
 
@@ -99,12 +106,18 @@ void vector_nullify(int n, double *v) {
     }
 }
 
+// computes the dot product using Kahan sum algorithm
 double vector_dot_product(int n, double *u, double *v) {
     double sum = 0.0;
+    double c = 0.0;
+    double y,t;
     int i;
 
     for (i = 0; i < n; i++) {
-        sum =+ u[i]*v[i];
+        y = u[i]*v[i] - c;
+        t = sum + y;
+        c = (t-sum)-y;
+        sum = t;
     }
     return sum;
 }

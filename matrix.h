@@ -9,13 +9,15 @@ void print_vector(int n, double *v);
 
 void print_matrix(int m, int n, double *a);
 
-void copy_vector(int n, double *u, double *v);
-
 void read_vector(FILE* fp, int n, double *v);
 
 void read_matrix(FILE* fp, int m, int n, double *a);
 
 void read_matrix_sc(FILE* fp, int n, double *a_vec);
+
+void write_vector_c(FILE *fp, int n, double *v);
+
+void write_vector(FILE *fp, int n, double *v);
 
 void gaxpy_s(int n, double *a_vec, double *x, double *y);
 
