@@ -7,6 +7,20 @@
 
 #define LCM LAPACK_COL_MAJOR
 
+/*
+ * Solve a symmetric definite positive linear system A*x = b using the conjugate gradient
+ * method without preconditionner. Writes the iterations to a given file
+ * IN:
+ * fp : a pointer to an opened file where each iterate x_k is to be written
+ * n : the order of the system
+ * a_vec : the matrix A in packed storage. i.e. a pointer to a bloc of size (n*(n+1))/2 of doubles
+ *      such that A[i][j] = a_vec[j*n + i - (j*(j+1))/2], (0 <= j <= i < n)
+ * b : a pointer to a bloc of size n of doubles containing the right hand side of the equation
+ * x : a pointer to a bloc of size n of doubles containing an arbitrary initial guess of the solution
+ * tol : the tolerance at which to stop the algorithm. 0 < tol
+ * OUT:
+ * returns the number of iterations at which the algorithm stopped
+ * */
 int solve_cg(FILE *fp, int n, double *a_vec, double *b, double *x, double tol) {
     double *r = calloc(n,sizeof(double));
     double *p = calloc(n,sizeof(double));
@@ -48,6 +62,21 @@ int solve_cg(FILE *fp, int n, double *a_vec, double *b, double *x, double tol) {
     return k;
 }
 
+/*
+ * Solve a symmetric definite positive linear system A*x = b using the conjugate gradient
+ * method with the jacobi preconditionner. Writes the iterations to a given file
+ * The jacobi preconditionner is the diagonal matrix whose elements are those of the diagonal of A.
+ * IN:
+ * fp : a pointer to an opened file where each iterate x_k is to be written
+ * n : the order of the system
+ * a_vec : the matrix A in packed storage. i.e. a pointer to a bloc of size (n*(n+1))/2 of doubles
+ *      such that A[i][j] = a_vec[j*n + i - (j*(j+1))/2], (0 <= j <= i < n)
+ * b : a pointer to a bloc of size n of doubles containing the right hand side of the equation
+ * x : a pointer to a bloc of size n of doubles containing an arbitrary initial guess of the solution
+ * tol : the tolerance at which to stop the algorithm. 0 < tol
+ * OUT:
+ * returns the number of iterations at which the algorithm stopped
+ * */
 int solve_cg_jacobi(FILE *fp, int n, double *a_vec, double *b, double *x, double tol) {
     double *r = calloc(n,sizeof(double));
     double *y = calloc(n,sizeof(double));
@@ -97,6 +126,23 @@ int solve_cg_jacobi(FILE *fp, int n, double *a_vec, double *b, double *x, double
     return k;
 }
 
+/*
+ * Solve a symmetric definite positive linear system A*x = b using the conjugate gradient
+ * method with the SSOR preconditionner. Writes the iterations to a given file
+ * The SSOR preconditionner is defined as M(w) = (1/(2-w))*(D/w + L)*(D/w)^-1 *(D/w + L)'
+ * where A = L + D + L', D is diagonal, L is a lower triangular matrix.
+ * IN:
+ * fp : a pointer to an opened file where each iterate x_k is to be written
+ * n : the order of the system
+ * a_vec : the matrix A in packed storage. i.e. a pointer to a bloc of size (n*(n+1))/2 of doubles
+ *      such that A[i][j] = a_vec[j*n + i - (j*(j+1))/2], (0 <= j <= i < n)
+ * b : a pointer to a bloc of size n of doubles containing the right hand side of the equation
+ * x : a pointer to a bloc of size n of doubles containing an arbitrary initial guess of the solution
+ * w : the parameter used in the SSOR preconditionner. 0 < w < 2
+ * tol : the tolerance at which to stop the algorithm. 0 < tol
+ * OUT:
+ * returns the number of iterations at which the algorithm stopped
+ * */
 int solve_cg_ssor(FILE *fp, int n, double *a_vec, double *b, double *x, double w, double tol) {
     double *r = calloc(n,sizeof(double));
     double *y = calloc(n,sizeof(double));
@@ -162,6 +208,24 @@ int solve_cg_ssor(FILE *fp, int n, double *a_vec, double *b, double *x, double w
     return k;
 }
 
+/*
+ * Solve a symmetric definite positive linear system A*x = b using the conjugate gradient
+ * method with the incomplete cholesky preconditionner. Writes the iterations to a given file
+ * The incomplete cholesky preconditionner is defined as M = K*K'
+ * where K is a lower triangular matrix such that K*K' ~= A. i.e. K is an incomplete cholesky factorisation of A
+ * IN:
+ * fp : a pointer to an opened file where each iterate x_k is to be written
+ * n : the order of the system
+ * a_vec : the matrix A in packed storage. i.e. a pointer to a bloc of size (n*(n+1))/2 of doubles
+ *      such that A[i][j] = a_vec[j*n + i - (j*(j+1))/2], (0 <= j <= i < n)
+ * b : a pointer to a bloc of size n of doubles containing the right hand side of the equation
+ * x : a pointer to a bloc of size n of doubles containing an arbitrary initial guess of the solution
+ * k_vec : an incomplete cholesky factorization of A in packed storage. i.e. a pointer to a bloc of size (n*(n+1))/2 of doubles
+ *      such that K[i][j] = k_vec[j*n + i - (j*(j+1))/2], (0 <= j <= i < n)
+ * tol : the tolerance at which to stop the algorithm. 0 < tol
+ * OUT:
+ * returns the number of iterations at which the algorithm stopped
+ * */
 int solve_cg_cholesky(FILE *fp, int n, double *a_vec, double *b, double *x, double *k_vec, double tol) {
     double *r = calloc(n,sizeof(double));
     double *y = calloc(n,sizeof(double));
@@ -215,6 +279,23 @@ int solve_cg_cholesky(FILE *fp, int n, double *a_vec, double *b, double *x, doub
     return k;
 }
 
+/*
+ * Solve a symmetric definite positive linear system A*x = b using the conjugate gradient
+ * method with the spectral preconditionner of order m. Writes the iterations to a given file
+ * The spectral conditionner of order m is defined as M = I + (lambda[1]-1)*v[1]*v[1]' + ... + (lambda[m]-1)*v[m]*v[m]'
+ * where lambda[i] is the i-th smallest eigenvalue of A, and v[i] is the associated eigenvector.
+ * IN:
+ * fp : a pointer to an opened file where each iterate x_k is to be written
+ * n : the order of the system
+ * a_vec : the matrix A in packed storage. i.e. a pointer to a bloc of size (n*(n+1))/2 of doubles
+ *      such that A[i][j] = a_vec[j*n + i - (j*(j+1))/2], (0 <= j <= i < n)
+ * b : a pointer to a bloc of size n of doubles containing the right hand side of the equation
+ * x : a pointer to a bloc of size n of doubles containing an arbitrary initial guess of the solution
+ * m : the order of the preconditionner
+ * tol : the tolerance at which to stop the algorithm. 0 < tol
+ * OUT:
+ * returns the number of iterations at which the algorithm stopped
+ * */
 int solve_cg_spectral(FILE *fp, int n, double *a_vec, double *b, double *x, int m, double tol) {
     double *r = calloc(n,sizeof(double));
     double *y = calloc(n,sizeof(double));
@@ -287,6 +368,19 @@ int solve_cg_spectral(FILE *fp, int n, double *a_vec, double *b, double *x, int 
     return k;
 }
 
+/*
+ * Computes the m smallest eigenvalues of a symmetric matrix A, and optionnally the associated eigenvectors
+ * IN:
+ * n : the order of A
+ * a_vec : the matrix A in packed storage, i.e. a pointer to a bloc of size (n*(n+1))/2 of doubles
+ *      such that A[i][j] = a_vec[j*n + i - (j*(j+1))/2], (0 <= j <= i < n)
+ * m : the desired number of eigenvalues
+ * jobz : Parameter for computing eigenvectors as well. 'N' for eigenvalues only, 'V' for eigenvalues and eigenvectors
+ * v : a pointer to a bloc of size n*m of doubles. If jobz = 'V', contains the computed eigenvectors.
+ * OUT:
+ * returns a pointer to a bloc of size n of double such that it's i-th element contains the i-th smallest eigenvalue
+ * of A. (0 <= i < m)
+ * */
 double* eig(int n, double *a_vec, int m, char jobz, double *v) {
     double *lambda = calloc(n,sizeof(double));
     double *t_vec = calloc((n*(n+1))/2, sizeof(double));

@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <math.h>
 
+/*
+ * prints a vector
+ * IN:
+ * n : the size of the vector
+ * x : a pointer to a bloc of size n of double containing the elements of the vector
+ * */
 void print_vector(int n, double *x)
 {
     int i;
@@ -12,6 +18,14 @@ void print_vector(int n, double *x)
     printf("\n\n");
 }
 
+/*
+ * prints a matrix A
+ * IN:
+ * m : the number of rows of the matrix
+ * n : the number of columns of the matrix
+ * a : a pointer to a bloc of size m*n of double such that
+ *      A[i][j] = a[j*m +i], (0<=j<n, 0<=i<m)
+ * */
 void print_matrix(int m, int n, double *a)
 {
     int i, j;
@@ -24,7 +38,13 @@ void print_matrix(int m, int n, double *a)
     printf("\n");
 }
 
-
+/*
+ * read a vector from a file
+ * IN:
+ * fp : a pointer to an opened file where the vector to be read is on the current line
+ * n : the number of elements of the vector
+ * v : a pointer to a bloc of size n of doubles. On exit, contains the vector read from the file
+ * */
 void read_vector(FILE* fp, int n, double *v) {
     char line[1024], *p, *e;
     int i;
@@ -35,7 +55,15 @@ void read_vector(FILE* fp, int n, double *v) {
     }
 }
 
-// read matrix from file and put it in column major order in a
+/*
+ * read a matrix A from a file and format it in column major order
+ * IN:
+ * fp : a pointer to an opened file such that the m next lines of the file contain the m lines of A
+ * m : the number of rows of A
+ * n : the number of columns of A
+ * a : a pointer to a bloc of size m*n of doubles. On exit, contains the matrix A in column major order
+ *      i.e. A[i][j] = A[i+j*m], (0<=i<m, 0<=j<n)
+ * */
 void read_matrix(FILE* fp, int m, int n, double *a) {
     double *v = calloc(n, sizeof(double));
     int i, j;
@@ -49,7 +77,16 @@ void read_matrix(FILE* fp, int m, int n, double *a) {
     free(v);
 }
 
-// read a symetric matrix in column form
+/* 
+ * read a symmetric (or lower triangular) matrix A in column form
+ * IN:
+ * fp : a pointer to an opened file such that the successive elements of A
+ *      are stored row first on each line.
+ * n : the number of rows and columns of A
+ * a_vec : a pointer to a bloc of size (n*(n+1))/2 of doubles.
+ *      On exit, contains A in packed storage, i.e.
+ *      A[i][j] = a_vec[j*n + i - (j*(j+1))/2], (0 <= j <= i < n)
+ * */
 void read_matrix_sc(FILE* fp, int n, double *a_vec) {
     int i,j;
     double val;
@@ -64,6 +101,13 @@ void read_matrix_sc(FILE* fp, int n, double *a_vec) {
     }
 }
 
+/*
+ * write a vector in column form to a file
+ * IN:
+ * fp : a pointer to an opened file where the vector should be written
+ * n : the number if elements of the vector
+ * v : a pointer to a bloc of size n of doubles containing the elements of the vector
+ * */
 void write_vector_c(FILE *fp, int n, double *v) {
     int i;
     fprintf(fp, "%d\n",n);
@@ -72,6 +116,13 @@ void write_vector_c(FILE *fp, int n, double *v) {
     }
 }
 
+/*
+ * write a vector in row form to a file
+ * IN:
+ * fp : a pointer to an opened file where the vector should be written
+ * n : the number if elements of the vector
+ * v : a pointer to a bloc of size n of doubles containing the elements of the vector
+ * */
 void write_vector(FILE *fp, int n, double *v) {
     int i;
     for (i = 0; i < n; i++) {
@@ -80,6 +131,14 @@ void write_vector(FILE *fp, int n, double *v) {
     fprintf(fp, "\n");
 }
 
+/*
+ * copy a vector to another
+ * IN:
+ * n : the size of the vectors
+ * u : a pointer to a bloc of size n of doubles containing the vector to be copied
+ * v : a pointer to a bloc of size n of doubles. On exit, the elements of u are copied to v
+ *      i.e. v[i] = u[i], (0<=i<n)
+ * */
 void copy_vector(int n, double *u, double *v) {
     int i;
     for (i = 0; i < n; i++) {
@@ -87,6 +146,16 @@ void copy_vector(int n, double *u, double *v) {
     }
 }
 
+/*
+ * computes A*x + y, where A is a symmetric matrix in packed storage
+ * IN:
+ * n : the number of rows and columns of A
+ * a_vec : a pointer to a bloc of size (n*(n+1))/2 of doubles containing A in packed storage.
+ *      i.e. A[i][j] = a_vec[j*n + i - (j*(j+1))/2], (0<=j<=i<n)
+ * x : a pointer to a bloc of size n of doubles containing the elements of x
+ * y : a pointer to a bloc of size n of doubles containing the elements of y
+ *      On exit, contains the result of A*x + y
+ * */
 void gaxpy_s(int n, double *a_vec, double *x, double *y) {
     int i,j;
 
@@ -100,6 +169,15 @@ void gaxpy_s(int n, double *a_vec, double *x, double *y) {
     }
 }
 
+/*
+ * compute a*x + y, where a is a scalar
+ * IN:
+ * n : the number of elements of x and y
+ * a : a real number
+ * x : a pointer to a bloc of size n of doubles containing the elements of x
+ * y : a pointer to a bloc of size n of doubles containing the elements of y
+ *      On exit, contains the result of a*x + y
+ * */
 void saxpy(int n, double a, double *x, double *y) {
     int i;
     for (i = 0; i < n; i++) {
@@ -107,6 +185,12 @@ void saxpy(int n, double a, double *x, double *y) {
     }
 }
 
+/*
+ * set all the elements of a vector to 0
+ * IN:
+ * n : the number of elements of the vector
+ * v : a pointer to a bloc of size n of doubles. On exit, v[i] = 0.0 (0<=i<n)
+ * */
 void vector_nullify(int n, double *v) {
     int i;
     for (i = 0; i < n; i++) {
@@ -114,7 +198,15 @@ void vector_nullify(int n, double *v) {
     }
 }
 
-// computes the dot product using Kahan sum algorithm
+/*
+ * compute the dot product of u and v using Kahan sum algorithm
+ * IN:
+ *  n : the number of elements of u and v
+ *  u : a pointer to a bloc of size n of doubles containing the elements of u
+ *  v : a pointer to a bloc of size n of doubles containing the elements of v
+ *  OUT:
+ *  returns the dot product u[0]*v[0] + ... + u[n-1]*v[n-1]
+ */
 double vector_dot_product(int n, double *u, double *v) {
     double sum = 0.0;
     double c = 0.0;
@@ -130,6 +222,14 @@ double vector_dot_product(int n, double *u, double *v) {
     return sum;
 }
 
+/*
+ * compute the euclidian norm of a vector
+ * IN:
+ * n : the number of elements of the vector
+ * v : a pointer to a bloc of size n of doubles containing the elements of the vector
+ * OUT:
+ * returns the euclidian norm of v
+ * */
 double vector_norm(int n, double *v) {
     return sqrt(vector_dot_product(n,v,v));
 }
