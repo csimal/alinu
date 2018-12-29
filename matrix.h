@@ -19,6 +19,8 @@ void write_vector_c(FILE *fp, int n, double *v);
 
 void write_vector(FILE *fp, int n, double *v);
 
+void copy_vector(int n, double *u, double *v);
+
 void gaxpy_s(int n, double *a_vec, double *x, double *y);
 
 void saxpy(int n, double a, double *x, double *y);
@@ -28,7 +30,5 @@ void vector_nullify(int n, double *v);
 double vector_dot_product(int n, double *u, double *v);
 
 double vector_norm(int n, double *v);
-
-void vector_copy(int n, double *u, double *v);
 
 #endif

@@ -7,7 +7,7 @@ void print_vector(int n, double *x)
 {
     int i;
     for (i = 0; i < n; i++) {
-        printf("%e ", x[i]);
+        printf("%le ", x[i]);
     }
     printf("\n\n");
 }
@@ -17,7 +17,7 @@ void print_matrix(int m, int n, double *a)
     int i, j;
     for (i = 0; i < m; i++) {
         for (j = 0; j < n; j++) {
-            printf("%e ", a[i+j*m]);
+            printf("%le ", a[i+j*m]);
         }
         printf("\n");
     }
@@ -46,6 +46,7 @@ void read_matrix(FILE* fp, int m, int n, double *a) {
             a[i+j*m] = v[j];
         }
     }
+    free(v);
 }
 
 // read a symetric matrix in column form
@@ -56,8 +57,8 @@ void read_matrix_sc(FILE* fp, int n, double *a_vec) {
     for (i = 0; i < n; i++) {
         for (j = 0; j < n; j++) {
             fscanf(fp,"%lf\n", &val);
-            if (i>=j) {
-                a_vec[(j-1)*n + i - (j*(j-1))/2] = val;
+            if (j <= i) {
+                a_vec[j*n + i - (j*(j+1))/2] = val;
             }
         }
     }
@@ -67,16 +68,23 @@ void write_vector_c(FILE *fp, int n, double *v) {
     int i;
     fprintf(fp, "%d\n",n);
     for (i = 0; i < n; i++) {
-       fprintf(fp, "%lf\n",v[i]); 
+       fprintf(fp, "%le\n",v[i]); 
     }
 }
 
 void write_vector(FILE *fp, int n, double *v) {
     int i;
     for (i = 0; i < n; i++) {
-        fprintf(fp, "%lf ", v[i]);
+        fprintf(fp, "%le ", v[i]);
     }
     fprintf(fp, "\n");
+}
+
+void copy_vector(int n, double *u, double *v) {
+    int i;
+    for (i = 0; i < n; i++) {
+        v[i] = u[i];
+    }
 }
 
 void gaxpy_s(int n, double *a_vec, double *x, double *y) {
@@ -84,10 +92,10 @@ void gaxpy_s(int n, double *a_vec, double *x, double *y) {
 
     for (j = 0; j < n; j++) {
         for (i = 0; i < j; i++) {
-            y[i] += a_vec[(i-1)*n + j - (i*(i-1))/2]*x[j];
+            y[i] += a_vec[i*n + j - (i*(i+1))/2]*x[j];
         }
         for (i = j; i < n; i++) {
-            y[i] += a_vec[(j-1)*n + i - (j*(j-1))/2]*x[j];
+            y[i] += a_vec[j*n + i - (j*(j+1))/2]*x[j];
         }
     }
 }
@@ -124,11 +132,4 @@ double vector_dot_product(int n, double *u, double *v) {
 
 double vector_norm(int n, double *v) {
     return sqrt(vector_dot_product(n,v,v));
-}
-
-void vector_copy(int n, double *u, double *v) {
-    int i;
-    for (i = 0; i < n; i++) {
-        v[i] = u[i];
-    }
 }

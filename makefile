@@ -6,16 +6,16 @@
 # le compilateur a utiliser
 CC=gcc
 # les options du compilateur e.g. -Wall
-CFLAGS= -Wall
+CFLAGS= -Wall #-g -O0
 # les librairies a linker
 LIBS= -lm -llapacke
 
 # les objets
-OBJS=matrix.o  conjugate_gradient.o
+OBJS=matrix.o conjugate_gradient.o main.o
 
 # Regle implicite pour compiler les fichiers .c en fichier .o (objets)
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $< $(LIBS)
 
 main: $(OBJS)
 	$(CC) -o main $(OBJS) $(LIBS)
