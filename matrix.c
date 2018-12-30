@@ -81,7 +81,7 @@ void read_matrix(FILE* fp, int m, int n, double *a) {
  * read a symmetric (or lower triangular) matrix A in column form
  * IN:
  * fp : a pointer to an opened file such that the successive elements of A
- *      are stored row first on each line.
+ *      are stored column first on each line.
  * n : the number of rows and columns of A
  * a_vec : a pointer to a bloc of size (n*(n+1))/2 of doubles.
  *      On exit, contains A in packed storage, i.e.
@@ -91,8 +91,8 @@ void read_matrix_sc(FILE* fp, int n, double *a_vec) {
     int i,j;
     double val;
 
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
+    for (j = 0; j < n; j++) {
+        for (i = 0; i < n; i++) {
             fscanf(fp,"%lf\n", &val);
             if (j <= i) {
                 a_vec[j*n + i - (j*(j+1))/2] = val;
