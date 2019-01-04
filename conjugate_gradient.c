@@ -165,10 +165,10 @@ int solve_cg_ssor(FILE *fp, int n, double *a_vec, double *b, double *x, double w
 
     copy_vector(n,r,y);
     LAPACKE_dtptrs(LCM, 'L', 'N', 'N', n, 1, m_vec, y, n); // M*q = r
-    LAPACKE_dtptrs(LCM, 'L', 'T', 'N', n, 1, m_vec, y, n); // M'*s = q
     for (i = 0; i < n; i++) {
-        y[i] *= w*(2.0-w)*a_vec[i*n + i - (i*(i+1))/2]; // y = w*(2-w)*D*s
+        y[i] *= a_vec[i*n + i - (i*(i+1))/2]/((2.0-w)*w); // y = (D/((2-w)*w))*s
     }
+    LAPACKE_dtptrs(LCM, 'L', 'T', 'N', n, 1, m_vec, y, n); // M'*s = q
 
     copy_vector(n,y,p); // p_0 = y_0
 
@@ -186,7 +186,7 @@ int solve_cg_ssor(FILE *fp, int n, double *a_vec, double *b, double *x, double w
         copy_vector(n,r,y);
         LAPACKE_dtptrs(LCM, 'L', 'T', 'N', n, 1, m_vec, y, n); // M'*q = r
         for (i = 0; i < n; i++) {
-            y[i] *= w*(2-w)*a_vec[i*n + i - (i*(i+1))/2]; // (D/w)^-1*s = q
+            y[i] *= a_vec[i*n + i - (i*(i+1))/2]/((2.0-w)*w); // y = (D/((2-w)*w))*s
         }
         LAPACKE_dtptrs(LCM, 'L', 'N', 'N', n, 1, m_vec, y, n); // M*y = s
         beta = vector_dot_product(n, y, r)/yr;
@@ -377,6 +377,7 @@ int solve_cg_spectral(FILE *fp, int n, double *a_vec, double *b, double *x, int 
  * m : the desired number of eigenvalues
  * jobz : Parameter for computing eigenvectors as well. 'N' for eigenvalues only, 'V' for eigenvalues and eigenvectors
  * v : a pointer to a bloc of size n*m of doubles. If jobz = 'V', contains the computed eigenvectors.
+ *      if jobz = 'N', it will not be referenced.
  * OUT:
  * returns a pointer to a bloc of size n of double such that it's i-th element contains the i-th smallest eigenvalue
  * of A. (0 <= i < m)
@@ -395,4 +396,105 @@ double* eig(int n, double *a_vec, int m, char jobz, double *v) {
     free(t_vec);
     free(ifail);
     return lambda;
+}
+
+void write_eig_jacobi(FILE *fp, int n, double *a_vec) {
+    double *t_vec = calloc((n*(n+1))/2,sizeof(double));
+    int i,j;
+
+    copy_vector((n*(n+1))/2, a_vec, t_vec);
+
+    for (i = 0; i < n; i++) {
+        double d = a_vec[i*n + i - (i*(i+1))/2];
+        for (j = 0; j <= i; j++) {
+            t_vec[j*n + i - (j*(j+1))/2] /= d; // divide each line by it's diagonal element
+        }
+    }
+
+    double *lambda = eig(n, t_vec, n, 'N', NULL);
+    write_vector_c(fp, n, lambda);
+
+    free(t_vec);
+    free(lambda);
+}
+
+void write_eig_ssor(FILE *fp, int n, double *a_vec, double w) {
+    double *t_vec = calloc((n*(n+1))/2,sizeof(double));
+    int i,j;
+
+    copy_vector((n*(n+1))/2, a_vec, t_vec);
+
+    for (i = 0; i < n; i++) {
+        t_vec[i*n + i - (i*(i+1))/2] /= w;
+    }
+
+    double *a_full = packed_to_full(n, a_vec);
+
+    LAPACKE_dtptrs(LCM, 'L', 'T', 'N', n, n, t_vec, a_full, n);
+    for (i = 0; i < n; i++) {
+        double d = a_full[i*n+i]/((2.0-w)*w);
+        for (j = 0; j < n; j++) {
+            a_full[j*n+i] *= d;
+        }
+    }
+    LAPACKE_dtptrs(LCM, 'L', 'N', 'N', n, n, t_vec, a_full, n);
+    double *m_vec = full_to_packed(n, a_full);
+
+    double *lambda = eig(n, m_vec, n, 'N', NULL);
+    write_vector_c(fp, n, lambda);
+
+    free(lambda);
+    free(m_vec);
+    free(a_full);
+    free(t_vec);
+}
+
+void write_eig_cholesky(FILE *fp, int n, double *a_vec, double *k_vec) {
+    double *a_full = packed_to_full(n, a_vec);
+
+    LAPACKE_dtptrs(LCM, 'L', 'T', 'N', n, n, k_vec, a_full, n);
+    LAPACKE_dtptrs(LCM, 'L', 'N', 'N', n, n, k_vec, a_full, n);
+
+    double *m_vec = full_to_packed(n, a_full);
+
+    double *lambda = eig(n, m_vec, n, 'N', NULL);
+    write_vector_c(fp, n, lambda);
+
+    free(lambda);
+    free(m_vec);
+    free(a_full);
+}
+
+void write_eig_spectral(FILE *fp, int n, double *a_vec, int m) {
+    double *m_vec = calloc((n*(n+1))/2,sizeof(double));
+    double *v = calloc(n*m, sizeof(double)); // eigenvectors
+    double *lambda;
+    int i,j,k;
+    
+    lambda = eig(n, a_vec, m, 'V', v); // get m smallest eigenvalues and eigenvectors
+
+    for (j = 0; j < n; j++) {
+        m_vec[j*n + j - (j*(j+1))/2] = 1.0;
+        for (i = j; i < n; i++) {
+            for (k = 0; k < m; k++) {
+                m_vec[j*n + i - (j*(j+1))/2] += (lambda[k]-1)*v[k*n+i]*v[k*n+j];
+            }
+        }
+    }
+    free(lambda);
+    free(v);
+
+    double *a_full = packed_to_full(n, a_vec);
+
+    LAPACKE_dppsv(LCM, 'L', n, n, m_vec, a_full, n);
+
+    free(m_vec);
+    m_vec = full_to_packed(n, a_full);
+
+    lambda = eig(n, m_vec, n, 'N', NULL);
+    write_vector_c(fp, n, lambda);
+
+    free(lambda);
+    free(m_vec);
+    free(a_full);
 }

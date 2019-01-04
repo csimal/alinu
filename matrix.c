@@ -233,3 +233,48 @@ double vector_dot_product(int n, double *u, double *v) {
 double vector_norm(int n, double *v) {
     return sqrt(vector_dot_product(n,v,v));
 }
+
+/*
+ * Converts a symmetric matrix from packed storage to full storage
+ * IN:
+ * n : the order the matrix
+ * a_vec : the matrix in packed storage, i.e. a pointer to a bloc of size (n*(n+1))/2 of doubles
+ *      such that A[i][j] = a_vec[j*n + i -(j*(j+1))/2], (0 <= j <= i < n)
+ * OUT:
+ * returns a pointer to a bloc of size n*n of doubles such that
+ * A[i][j] = a_full[j*n+i], 0 <= i < n, 0 <= j < n
+ * */
+double* packed_to_full(int n, double *a_vec) {
+    double *a_full = calloc(n*n, sizeof(double));
+    int i,j;
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j <= i; j++) {
+            a_full[j*n+i] = a_vec[j*n + i - (j*(j+1))/2];
+            a_full[i*n+j] = a_vec[j*n + i - (j*(j+1))/2];
+        }
+    }
+    return a_full;
+}
+
+/*
+ * Converts a symmetric matrix from full storage to packed storage
+ * IN:
+ * n : the order of the matrix
+ * a_full : a pointer to a bloc of size n*n of doubles such that
+ *       A[i][j] = a_full[j*n+i], 0 <= i < n, 0 <= j < n
+ * OUT:
+ * returns a pointer to a bloc of size (n*(n+1))/2 of doubles
+ * such that A[i][j] = a_vec[j*n + i -(j*(j+1))/2], (0 <= j <= i < n)
+ * */
+double* full_to_packed(int n, double *a_full) {
+    double *a_vec = calloc((n*(n+1))/2,sizeof(double));
+    int i, j;
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j <= i; j++) {
+            a_vec[j*n + i - (j*(j+1))/2] = a_full[j*n+i];
+        }
+    }
+    return a_vec;
+}

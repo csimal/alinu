@@ -72,6 +72,11 @@ int main(int argc, char const *argv[]) {
         k = solve_cg_jacobi(fp, n, a_vec, b, x, TOL);
         fclose(fp);
         printf("converged after %d iterations\n", k);
+
+        sprintf(filename, "results/eigenvalues_jacobi_%d.dat", i);
+        fp = fopen(filename,"w");
+        write_eig_jacobi(fp, n, a_vec);
+        fclose(fp);
         
         // solve with cg with ssor precondtionner
         printf("Solving with SSOR preconditionner\n");
@@ -82,6 +87,11 @@ int main(int argc, char const *argv[]) {
         k = solve_cg_ssor(fp, n, a_vec, b, x, w, TOL);
         fclose(fp);
         printf("converged after %d iterations\n", k);
+
+        sprintf(filename, "results/eigenvalues_ssor_w%.2lf_%d.dat", w, i);
+        fp = fopen(filename,"w");
+        write_eig_ssor(fp, n, a_vec, w);
+        fclose(fp);
 
         // solve with cg with incomplete cholesky precondtionner
         printf("Solving with incomplete Cholesky conditionner\n");
@@ -96,6 +106,11 @@ int main(int argc, char const *argv[]) {
         fclose(fp);
         printf("converged after %d iterations\n", k);
         
+        sprintf(filename, "results/eigenvalues_cholesky_%d.dat", i);
+        fp = fopen(filename,"w");
+        write_eig_cholesky(fp, n, a_vec, a_tmp);
+        fclose(fp);
+        
         // solve with cg with spectral precondtionner
         printf("Solving with spectral conditionner\n");
         int m;
@@ -107,6 +122,11 @@ int main(int argc, char const *argv[]) {
             k = solve_cg_spectral(fp, n, a_vec, b, x, m, TOL);
             fclose(fp);
             printf("converged after %d iterations\n", k);
+        
+            sprintf(filename, "results/eigenvalues_spectral_%d_%d.dat", m, i);
+            fp = fopen(filename,"w");
+            write_eig_spectral(fp, n, a_vec, m);
+            fclose(fp);
         }
     }
 

@@ -31,4 +31,8 @@ double vector_dot_product(int n, double *u, double *v);
 
 double vector_norm(int n, double *v);
 
+double* packed_to_full(int n, double *a_vec);
+
+double* full_to_packed(int n, double *a_full);
+
 #endif
