@@ -9,7 +9,7 @@
 #define LCM LAPACK_COL_MAJOR
 
 int main(int argc, char const *argv[]) {
-    FILE *fp;
+    FILE *fp, *fp2;
     double *a_vec, *a_tmp, *b, *x, *lambda;
     int i,n,k;
     char filename[100];
@@ -80,18 +80,24 @@ int main(int argc, char const *argv[]) {
         
         // solve with cg with ssor precondtionner
         printf("Solving with SSOR preconditionner\n");
-        double w = 1.0;
-        copy_vector(n,b,x);
-        sprintf(filename, "results/termes_cg_ssor_w%.2lf_%d.dat", w, i);
-        fp = fopen(filename,"w");
-        k = solve_cg_ssor(fp, n, a_vec, b, x, w, TOL);
-        fclose(fp);
-        printf("converged after %d iterations\n", k);
+        double w;
+        sprintf(filename, "results/iter_ssor_%d.dat", i);
+        fp2 = fopen(filename, "w");
+        for (w = 0.1; w < 2.0; w += 0.1) {
+            copy_vector(n,b,x);
+            sprintf(filename, "results/termes_cg_ssor_w%.2lf_%d.dat", w, i);
+            fp = fopen(filename,"w");
+            k = solve_cg_ssor(fp, n, a_vec, b, x, w, TOL);
+            fclose(fp);
+            printf("converged after %d iterations\n", k);
+            fprintf(fp2, "%.2lf %d\n", w, k);
 
-        sprintf(filename, "results/eigenvalues_ssor_w%.2lf_%d.dat", w, i);
-        fp = fopen(filename,"w");
-        write_eig_ssor(fp, n, a_vec, w);
-        fclose(fp);
+            sprintf(filename, "results/eigenvalues_ssor_w%.2lf_%d.dat", w, i);
+            fp = fopen(filename,"w");
+            write_eig_ssor(fp, n, a_vec, w);
+            fclose(fp);
+        }
+        fclose(fp2);
 
         // solve with cg with incomplete cholesky precondtionner
         printf("Solving with incomplete Cholesky conditionner\n");
@@ -113,8 +119,10 @@ int main(int argc, char const *argv[]) {
         
         // solve with cg with spectral precondtionner
         printf("Solving with spectral conditionner\n");
+        sprintf(filename, "results/iter_spectral_%d.dat", i);
+        fp2 = fopen(filename, "w");
         int m;
-        for (m = 1; m <= 10; m++) {
+        for (m = 1; m <= 100; m++) {
             printf("m = %d\n", m);
             copy_vector(n,b,x);
             sprintf(filename, "results/termes_cg_spectral_%d_%d.dat", m, i);
@@ -122,12 +130,13 @@ int main(int argc, char const *argv[]) {
             k = solve_cg_spectral(fp, n, a_vec, b, x, m, TOL);
             fclose(fp);
             printf("converged after %d iterations\n", k);
-        
+            fprintf(fp2, "%d %d\n", m, k);
             sprintf(filename, "results/eigenvalues_spectral_%d_%d.dat", m, i);
             fp = fopen(filename,"w");
             write_eig_spectral(fp, n, a_vec, m);
             fclose(fp);
         }
+        fclose(fp2);
     }
 
     free(a_vec);
