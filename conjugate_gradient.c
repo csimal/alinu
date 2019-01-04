@@ -166,7 +166,7 @@ int solve_cg_ssor(FILE *fp, int n, double *a_vec, double *b, double *x, double w
     copy_vector(n,r,y);
     LAPACKE_dtptrs(LCM, 'L', 'N', 'N', n, 1, m_vec, y, n); // M*q = r
     for (i = 0; i < n; i++) {
-        y[i] *= a_vec[i*n + i - (i*(i+1))/2]/((2.0-w)*w); // y = (D/((2-w)*w))*s
+        y[i] *= (2.0-w)*m_vec[i*n + i - (i*(i+1))/2]; // y = (2-w)*(D/w)*s
     }
     LAPACKE_dtptrs(LCM, 'L', 'T', 'N', n, 1, m_vec, y, n); // M'*s = q
 
@@ -186,7 +186,7 @@ int solve_cg_ssor(FILE *fp, int n, double *a_vec, double *b, double *x, double w
         copy_vector(n,r,y);
         LAPACKE_dtptrs(LCM, 'L', 'T', 'N', n, 1, m_vec, y, n); // M'*q = r
         for (i = 0; i < n; i++) {
-            y[i] *= a_vec[i*n + i - (i*(i+1))/2]/((2.0-w)*w); // y = (D/((2-w)*w))*s
+            y[i] *= (2.0-w)*m_vec[i*n + i - (i*(i+1))/2]; // y = (D/((2-w)*w))*s
         }
         LAPACKE_dtptrs(LCM, 'L', 'N', 'N', n, 1, m_vec, y, n); // M*y = s
         beta = vector_dot_product(n, y, r)/yr;
@@ -398,6 +398,14 @@ double* eig(int n, double *a_vec, int m, char jobz, double *v) {
     return lambda;
 }
 
+/*
+ * writes the eigenvalues of M^-1 A to a file
+ * where M is the jacobi preconditionner
+ * IN:
+ * fp : a pointer to an opened file
+ * n : the order of A
+ * a_vec : the matrix A in packed storage
+ * */
 void write_eig_jacobi(FILE *fp, int n, double *a_vec) {
     double *t_vec = calloc((n*(n+1))/2,sizeof(double));
     int i,j;
@@ -418,6 +426,15 @@ void write_eig_jacobi(FILE *fp, int n, double *a_vec) {
     free(lambda);
 }
 
+/*
+ * writes the eigenvalues of M^-1 A to a file
+ * where M is the SSOR preconditionner
+ * IN:
+ * fp : a pointer to an opened file
+ * n : the order of A
+ * a_vec : the matrix A in packed storage
+ * w : the parameter used in the SSOR preconditionner
+ * */
 void write_eig_ssor(FILE *fp, int n, double *a_vec, double w) {
     double *t_vec = calloc((n*(n+1))/2,sizeof(double));
     int i,j;
@@ -432,7 +449,7 @@ void write_eig_ssor(FILE *fp, int n, double *a_vec, double w) {
 
     LAPACKE_dtptrs(LCM, 'L', 'T', 'N', n, n, t_vec, a_full, n);
     for (i = 0; i < n; i++) {
-        double d = a_full[i*n+i]/((2.0-w)*w);
+        double d = (2.0-w)*t_vec[i*n + i - (i*(i+1))/2];
         for (j = 0; j < n; j++) {
             a_full[j*n+i] *= d;
         }
@@ -449,6 +466,16 @@ void write_eig_ssor(FILE *fp, int n, double *a_vec, double w) {
     free(t_vec);
 }
 
+/*
+ * writes the eigenvalues of M^-1 A to a file
+ * where M is the incomplete cholesky preconditionner
+ * IN:
+ * fp : a pointer to an opened file
+ * n : the order of A
+ * a_vec : the matrix A in packed storage
+ * k_vec : the K factor of the incomplete cholesky preconditionner
+ *      in packed storage
+ * */
 void write_eig_cholesky(FILE *fp, int n, double *a_vec, double *k_vec) {
     double *a_full = packed_to_full(n, a_vec);
 
@@ -465,6 +492,15 @@ void write_eig_cholesky(FILE *fp, int n, double *a_vec, double *k_vec) {
     free(a_full);
 }
 
+/*
+ * writes the eigenvalues of M^-1 A to a file
+ * where M is the spectral preconditionner
+ * IN:
+ * fp : a pointer to an opened file
+ * n : the order of A
+ * a_vec : the matrix A in packed storage
+ * m : the number of eigenvalues to use in the preconditionner
+ * */
 void write_eig_spectral(FILE *fp, int n, double *a_vec, int m) {
     double *m_vec = calloc((n*(n+1))/2,sizeof(double));
     double *v = calloc(n*m, sizeof(double)); // eigenvectors
